@@ -117,6 +117,9 @@ public class MaintenanceEditor extends AbstractWindow {
 
     @Nullable
     protected Role getUserRole(UUID roleId) {
+        if (roleId == null) {
+            return null;
+        }
         return dataManager.load(Role.class)
                 .id(roleId)
                 .view(View.MINIMAL)
