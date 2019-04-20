@@ -5,6 +5,7 @@ import com.haulmont.cuba.core.EntityManager;
 import com.haulmont.cuba.core.Persistence;
 import com.haulmont.cuba.core.Transaction;
 import com.haulmont.cuba.core.global.Messages;
+import com.haulmont.cuba.security.auth.AbstractClientCredentials;
 import com.haulmont.cuba.security.auth.AuthenticationDetails;
 import com.haulmont.cuba.security.auth.Credentials;
 import com.haulmont.cuba.security.auth.checks.AbstractUserAccessChecker;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -49,7 +51,18 @@ public class MaintenanceUserAccessChecker extends AbstractUserAccessChecker impl
         User user = authenticationDetails.getSession().getCurrentOrSubstitutedUser();
         if (Boolean.TRUE.equals(config.getEnabled())) {
             if (!isAcceptable(user)) {
-                throw new LoginException(messages.getMessage(getClass(), "MaintenanceUserAccessChecker.serverUnderMaintenance"));
+                Locale userLocale = null;
+                if (credentials instanceof AbstractClientCredentials) {
+                    AbstractClientCredentials clientCredentials = (AbstractClientCredentials) credentials;
+                    if (clientCredentials.getLocale() != null) {
+                        userLocale = clientCredentials.getLocale();
+                    }
+                }
+                if (userLocale == null) {
+                    userLocale = messages.getTools().getDefaultLocale();
+                }
+
+                throw new LoginException(messages.getMessage(getClass(), "MaintenanceUserAccessChecker.serverUnderMaintenance", userLocale));
             }
         }
     }

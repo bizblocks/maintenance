@@ -5,7 +5,11 @@
     <dsContext>
         <collectionDatasource id="rolesDs"
                               class="com.haulmont.cuba.security.entity.Role"
-                              view="_minimal"/>
+                              view="_minimal">
+            <query>
+                <![CDATA[select e from sec$Role e order by e.name]]>
+            </query>
+        </collectionDatasource>
     </dsContext>
     <dialogMode width="800"
                 height="600"/>
@@ -24,7 +28,7 @@
                 </column>
                 <column>
                     <field id="userRole" caption="msg://maintenanceEditor.acceptableUserRole">
-                        <lookupField id="userRoleField" width="100%"/>
+                        <lookupField id="userRoleField" width="100%" optionsDatasource="rolesDs"/>
                     </field>
                 </column>
             </fieldGroup>
