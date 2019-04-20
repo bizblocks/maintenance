@@ -1,6 +1,9 @@
 package com.groupstp.maintenance.core.security;
 
 import com.groupstp.maintenance.config.MaintenanceConfig;
+import com.haulmont.cuba.core.EntityManager;
+import com.haulmont.cuba.core.Persistence;
+import com.haulmont.cuba.core.Transaction;
 import com.haulmont.cuba.core.global.Messages;
 import com.haulmont.cuba.security.auth.AuthenticationDetails;
 import com.haulmont.cuba.security.auth.Credentials;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Checks if login to system denied since server are in maintenance right now
@@ -23,6 +27,9 @@ import java.util.List;
  */
 @Component("mtnc_MaintenanceUserAccessChecker")
 public class MaintenanceUserAccessChecker extends AbstractUserAccessChecker implements Ordered {
+
+    @Inject
+    protected Persistence persistence;
 
     @Inject
     protected MaintenanceConfig config;
@@ -41,18 +48,48 @@ public class MaintenanceUserAccessChecker extends AbstractUserAccessChecker impl
     public void check(Credentials credentials, AuthenticationDetails authenticationDetails) throws LoginException {
         User user = authenticationDetails.getSession().getCurrentOrSubstitutedUser();
         if (Boolean.TRUE.equals(config.getEnabled())) {
-            if (!isAdmin(user)) {
+            if (!isAcceptable(user)) {
                 throw new LoginException(messages.getMessage(getClass(), "MaintenanceUserAccessChecker.serverUnderMaintenance"));
             }
         }
     }
 
-    protected boolean isAdmin(User user) {
+    protected boolean isAcceptable(User user) {
+        boolean result = false;
         if (user != null) {
+            try (Transaction tr = persistence.getTransaction()) {
+                EntityManager em = persistence.getEntityManager();
+                user = em.merge(user);//to be sure what all user roles are loaded
+
+                if (isAdmin(user) || isSpecialUser(user)) {
+                    result = true;
+                }
+
+                tr.commit();
+            }
+        }
+        return result;
+    }
+
+    protected boolean isAdmin(User user) {
+        List<UserRole> userRoles = user.getUserRoles();
+        if (!CollectionUtils.isEmpty(userRoles)) {
+            for (UserRole ur : userRoles) {
+                if (RoleType.SUPER.equals(ur.getRole() == null ? null : ur.getRole().getType())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    protected boolean isSpecialUser(User user) {
+        UUID specialUserRoleId = config.getAccessUserRole();
+        if (specialUserRoleId != null) {
             List<UserRole> userRoles = user.getUserRoles();
             if (!CollectionUtils.isEmpty(userRoles)) {
                 for (UserRole ur : userRoles) {
-                    if (RoleType.SUPER.equals(ur.getRole().getType())) {
+                    if (specialUserRoleId.equals(ur.getRole() == null ? null : ur.getRole().getId())) {
                         return true;
                     }
                 }

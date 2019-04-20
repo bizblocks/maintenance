@@ -1,12 +1,17 @@
 package com.groupstp.maintenance.web.editor;
 
 import com.groupstp.maintenance.config.MaintenanceConfig;
+import com.haulmont.cuba.core.global.DataManager;
+import com.haulmont.cuba.core.global.View;
 import com.haulmont.cuba.gui.components.*;
 import com.haulmont.cuba.gui.xml.layout.ComponentsFactory;
+import com.haulmont.cuba.security.entity.Role;
 import org.apache.commons.lang.StringUtils;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Maintenance settings editor screen
@@ -17,6 +22,8 @@ public class MaintenanceEditor extends AbstractWindow {
 
     @Inject
     protected ComponentsFactory componentsFactory;
+    @Inject
+    protected DataManager dataManager;
 
     @Inject
     protected MaintenanceConfig config;
@@ -25,6 +32,8 @@ public class MaintenanceEditor extends AbstractWindow {
     protected CheckBox enableChb;
     @Inject
     protected TextField loginParameterNameField;
+    @Inject
+    protected LookupField userRoleField;
     @Inject
     protected TabSheet pageEditorTabSheet;
     @Inject
@@ -46,6 +55,7 @@ public class MaintenanceEditor extends AbstractWindow {
     protected void initData() {
         enableChb.setValue(config.getEnabled());
         loginParameterNameField.setValue(config.getLoginParameterName());
+        userRoleField.setValue(getUserRole(config.getAccessUserRole()));
 
         String page = config.getMaintenancePage();
         pageEditorHtml.setValue(page);
@@ -94,6 +104,7 @@ public class MaintenanceEditor extends AbstractWindow {
 
             config.setEnabled(enableChb.isChecked());
             config.setLoginParameterName(loginParameterNameField.getValue());
+            config.setAccessUserRole(userRoleField.getValue() == null ? null : ((Role) userRoleField.getValue()).getId());
             config.setMaintenancePage(field.getValue());
 
             close(COMMIT_ACTION_ID, true);
@@ -102,5 +113,14 @@ public class MaintenanceEditor extends AbstractWindow {
 
     public void onCancel() {
         close(CLOSE_ACTION_ID, true);
+    }
+
+    @Nullable
+    protected Role getUserRole(UUID roleId) {
+        return dataManager.load(Role.class)
+                .id(roleId)
+                .view(View.MINIMAL)
+                .optional()
+                .orElse(null);
     }
 }

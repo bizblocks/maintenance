@@ -2,6 +2,11 @@
         class="com.groupstp.maintenance.web.editor.MaintenanceEditor"
         caption="msg://maintenanceEditor.caption"
         messagesPack="com.groupstp.maintenance.web.editor">
+    <dsContext>
+        <collectionDatasource id="rolesDs"
+                              class="com.haulmont.cuba.security.entity.Role"
+                              view="_minimal"/>
+    </dsContext>
     <dialogMode width="800"
                 height="600"/>
     <layout spacing="true" expand="mainSplit">
@@ -15,6 +20,11 @@
                 <column width="200px">
                     <field id="loginParameterName" caption="msg://maintenanceEditor.loginParameterName">
                         <textField id="loginParameterNameField" width="100%"/>
+                    </field>
+                </column>
+                <column>
+                    <field id="userRole" caption="msg://maintenanceEditor.acceptableUserRole">
+                        <lookupField id="userRoleField" width="100%"/>
                     </field>
                 </column>
             </fieldGroup>
@@ -40,7 +50,7 @@
             <vbox width="100%" height="100%" spacing="true" margin="false,false,false,true" expand="previewBox">
                 <label value="msg://maintenanceEditor.maintenancePagePreview" stylename="h3"/>
                 <scrollBox id="previewBox"
-                      width="100%"/>
+                           width="100%"/>
             </vbox>
         </split>
         <hbox spacing="true" stylename="c-edit-window-actions" margin="true,false,false,false" align="MIDDLE_LEFT">

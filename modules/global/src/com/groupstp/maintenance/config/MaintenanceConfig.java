@@ -6,6 +6,10 @@ import com.haulmont.cuba.core.config.Source;
 import com.haulmont.cuba.core.config.SourceType;
 import com.haulmont.cuba.core.config.defaults.Default;
 import com.haulmont.cuba.core.config.defaults.DefaultBoolean;
+import com.haulmont.cuba.core.config.type.Factory;
+import com.haulmont.cuba.core.config.type.UuidTypeFactory;
+
+import java.util.UUID;
 
 /**
  * Maintenance configuration settings
@@ -50,4 +54,13 @@ public interface MaintenanceConfig extends Config {
     String getMaintenancePage();
 
     void setMaintenancePage(String value);
+
+    /**
+     * @return acceptable user role who can access to system in maintenance mode
+     */
+    @Property("maintenance.accessUserRole")
+    @Factory(factory = UuidTypeFactory.class)
+    UUID getAccessUserRole();
+
+    void setAccessUserRole(UUID userRole);
 }
